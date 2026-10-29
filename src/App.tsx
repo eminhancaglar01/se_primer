@@ -33,6 +33,7 @@ export const App: React.FC = () => {
       state.isSimulating &&
       !state.isCompleted &&
       !state.activeConsequence &&
+      !state.isTutorOpen &&
       state.profile?.experience === 'experienced'
     ) {
       interval = setInterval(() => {

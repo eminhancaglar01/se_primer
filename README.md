@@ -165,7 +165,7 @@ node scripts/evaluate_tutor.js
 
 - **GitHub Repository:** [https://github.com/eminhancaglar01/se_primer](https://github.com/eminhancaglar01/se_primer)
 - **Canlı Demo (Live App):** Uygulama production-ready olarak derlenmiştir (`dist/`). Vercel / Netlify veya Google Cloud Run ortamına tek tıkla dağıtılabilir.
-- **60 Saniyelik Tanıtım Videosu Materyalleri:**
+- **60 Saniyelik Tanıtım Videosu:** [docs/se_primer_demo_walkthrough.mp4](docs/se_primer_demo_walkthrough.mp4) (Cypress Electron ile 390x844 mobil görünümde kaydedildi)
   - Seslendirme Metni: [docs/demo-script.md](docs/demo-script.md)
   - Storyboard: [docs/storyboard.md](docs/storyboard.md)
   - Kayıt ve Yükleme Yönergesi: [docs/recording-guide.md](docs/recording-guide.md)
