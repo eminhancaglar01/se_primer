@@ -45,7 +45,7 @@ Bu belge, **SE Primer** projesinin 60 saniyelik tanıtım videosunun çekimi, Yo
   ```
   SE Primer: 08:00'de çöken sağlık randevu sisteminin nöbetçi mühendisi olarak teknik, test ve KVKK kararları aldığınız Sokratik AI destekli kriz simülasyonu.
   
-  GitHub Repo: https://github.com/your-username/SE-Primer
+  GitHub Repo: https://github.com/eminhancaglar01/se_primer
   Canlı Demo: http://localhost:5173 / Google AI Studio Live
   
   Teknolojiler: React 19, TypeScript, Tailwind CSS, Google Gemini 1.5 Flash, Cypress E2E.

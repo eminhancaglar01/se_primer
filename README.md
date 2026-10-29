@@ -111,8 +111,8 @@ SE-Primer/
 
 ### Adım 1: Bağımlılıkları Yükleyin
 ```bash
-git clone https://github.com/your-username/SE-Primer.git
-cd SE-Primer
+git clone https://github.com/eminhancaglar01/se_primer.git
+cd se_primer
 npm install
 ```
 
@@ -163,7 +163,7 @@ node scripts/evaluate_tutor.js
 
 ## 7. Teslimat Bağlantıları ve Notlar
 
-- **GitHub Repository:** Hazırlandı ve yerel commit'lendi.
+- **GitHub Repository:** [https://github.com/eminhancaglar01/se_primer](https://github.com/eminhancaglar01/se_primer)
 - **Canlı Demo (Live App):** Uygulama production-ready olarak derlenmiştir (`dist/`). Vercel / Netlify veya Google Cloud Run ortamına tek tıkla dağıtılabilir.
 - **60 Saniyelik Tanıtım Videosu Materyalleri:**
   - Seslendirme Metni: [docs/demo-script.md](docs/demo-script.md)
