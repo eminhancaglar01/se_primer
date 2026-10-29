@@ -1,0 +1,307 @@
+import { DecisionStage, EndingData, EngineeringRole } from '../types';
+
+export const SCENARIO_STAGES: Record<1 | 2 | 3, DecisionStage> = {
+  1: {
+    id: 1,
+    title: "Aşama 1: Mimari Karar",
+    subtitle: "Kritik Çöküş ve Sürüm Stratejisi",
+    category: "Mimari",
+    scenario: "Saat 08:00. Dün gece 02:00'de canlıya alınan v2.4.0 sürümü nedeniyle randevu mikroservisi kilitlendi. Veritabanı bağlantı havuzu (connection pool) tükendi ve sistem HTTP 500 hataları fırlatıyor. Hastane poliklinik kapılarında ve mobil uygulamada 300 hasta sıra bekliyor. Nöbetçi kıdemli mühendis sensin. Ne yapacaksın?",
+    systemMetrics: {
+      time: "08:02",
+      waitingPatients: 300,
+      errorRate: "%84.2",
+      dbConnections: "200/200 (Doygun)",
+    },
+    options: {
+      A: {
+        id: "A",
+        title: "Önceki Stabil Sürüme Geri Al (Rollback v2.3.9)",
+        shortDesc: "Canlı ortamı dün geceden önceki kanıtlanmış stabil sürüme döndür.",
+        actionLabel: "Rollback Başlat",
+        badge: "Geri Alma Stratejisi",
+        riskLevel: "Düşük",
+      },
+      B: {
+        id: "B",
+        title: "Canlı Ortamda Hızlı Yama Uygula (Hotfix to Prod)",
+        shortDesc: "Connection pool limitini ve thread ayarlarını doğrudan canlıda değiştirip yeniden başlat.",
+        actionLabel: "Acil Yama Dağıt",
+        badge: "Canlı Müdahale",
+        riskLevel: "Yüksek",
+      },
+    },
+    consequences: {
+      A: {
+        title: "Rollback (v2.3.9) Uygulandı",
+        summary: "Sistem eski stabil sürüme çekildi. Veritabanı bağlantıları rahatlamaya başladı.",
+        whatHappened: "Konteyner orkestrasyonu (Kubernetes) önceki kararlı Docker imajını (v2.3.9) ayağa kaldırdı. Trafik eski pod'lara yönlendirildi.",
+        whyItHappened: "Eski sürüm bilinen ve bellek/bağlantı sızıntısı içermeyen stabil konfigürasyona sahipti. Ancak v2.4.0 ile gelen veritabanı şema migration'larının geriye dönük uyumluluğu kontrol edilmelidir.",
+        technicalDetails: "Bağlantı havuzu doyumdan 45/200 seviyesine geriledi. DB transaction kilitleri çözülmeye başladı. Şema uyumsuzluğu riski hala doğrulanmayı bekliyor.",
+        metrics: {
+          systemStatus: "İncelemede",
+          activePatients: "300 Bekliyor",
+          downtime: "+8 Dakika",
+          riskScore: "Düşük",
+        },
+      },
+      B: {
+        title: "Doğrudan Canlıya Yama (Hotfix) Uygulandı",
+        summary: "Canlı konfigürasyon değiştirildi, ancak beklenmeyen yan etkiler ortaya çıktı.",
+        whatHappened: "Havuz limiti artırıldı ancak veritabanı CPU kullanımı %98'e fırladı. Kod incelemesi (Code Review) yapılmadığı için deadlock riski oluştu.",
+        whyItHappened: "Canlıda yapılan kontrolsüz müdahaleler, kök nedeni çözmek yerine semptomu maskeledi ve veritabanı sunucusu üzerinde aşırı I/O yükü yarattı.",
+        technicalDetails: "DB bağlantı havuzu 400'e çıkarıldı fakat Postgres sunucusu RAM yetersizliği nedeniyle swapping yapmaya başladı. Gecikmeler 120ms'den 2400ms'ye yükseldi.",
+        metrics: {
+          systemStatus: "Kısmi Arıza",
+          activePatients: "300 Bekliyor",
+          downtime: "+14 Dakika",
+          riskScore: "Yüksek",
+        },
+      },
+    },
+    beginnerHint: "💡 Yeni sürümde veritabanı yapısı (şema) değişti mi? Rollback yapıldığında eski kod yeni şemayla çalışabilir mi? Hotfix ise canlıda test edilmemiş ek riskler doğurabilir.",
+    roleContext: {
+      backend: "Backend Bakış Açısı: v2.4.0 migration script'i 'down' migration barındırıyor mu? Connection pool sızıntısı ORM seviyesinde mi yoksa DB deadlock mu?",
+      frontend: "Frontend Bakış Açısı: Randevu ekranları API'den 500 aldığı için retry fırtınası (retry storm) yaratıyor. İstemcide exponential backoff şart.",
+      fullstack: "Full-Stack Bakış Açısı: Hem API gateway'deki timeout sürelerini hem de mikroservis rollback güvenliğini eşzamanlı gözlemlemelisin.",
+      devops: "DevOps Bakış Açısı: CI/CD pipeline'da canary deployment yapılmadığı için tüm trafik bozuk sürüme gitti. Helm rollback ile hızlı dönüş mümkün mü?",
+      software: "Genel Mühendislik: Hızlı yama uygulamak kulağa çekici gelse de öngörülemeyen yan etkilerle kriz süresini uzatabilir.",
+      student: "Öğrenci Notu: Üretim ortamında en temel kural, emin olunmayan bir kodla panik halinde canlıya müdahale etmemektir.",
+    },
+  },
+
+  2: {
+    id: 2,
+    title: "Aşama 2: Test ve Doğrulama Kararı",
+    subtitle: "Risk vs. Hız Ödünleşimi",
+    category: "Test & Güvenilirlik",
+    scenario: "Saat 08:12. İlk müdahale paketi derlendi ve staging ortamına hazırlandı. Başhekimlik ve hastane operasyon direktörü telefonda: 'Kapıda tansiyon yükseliyor, her saniye aleyhimize işliyor, hemen canlıya alın!' diyor. Önünde iki yol var:",
+    systemMetrics: {
+      time: "08:12",
+      waitingPatients: 300,
+      errorRate: "%62.0",
+      dbConnections: "110/200",
+    },
+    options: {
+      A: {
+        id: "A",
+        title: "Kritik Yol / Duman Testini Koş (Smoke Test)",
+        shortDesc: "5 dakikalık otomatik testle randevu alma ve hasta doğrulama akışını doğrula.",
+        actionLabel: "Duman Testini Başlat",
+        badge: "Regresyon Koruması",
+        riskLevel: "Düşük",
+      },
+      B: {
+        id: "B",
+        title: "Testleri Atla ve Anında Canlıya Dağıt (Immediate Deploy)",
+        shortDesc: "Baskıyı azaltmak için test adımlarını (--skip-tests) atlayıp hemen yayınla.",
+        actionLabel: "Doğrudan Dağıt",
+        badge: "Yüksek Risk / Hızlı Dağıtım",
+        riskLevel: "Kritik",
+      },
+    },
+    consequences: {
+      A: {
+        title: "Kritik Yol ve Duman Testleri Başarıyla Tamamlandı",
+        summary: "5 dakikalık otomatik test seti, randevu oluşturma ve SMS bildirim akışının sorunsuz olduğunu doğruladı.",
+        whatHappened: "Test süiti kritik bir serialization hatasını canlıya çıkmadan önce yakaladı ve otomatik yamaladı.",
+        whyItHappened: "Kısa süreli duman testleri, sistemin en temel iş fonksiyonlarının (happy path) çalıştığını garanti ederek ikincil çöküşleri engeller.",
+        technicalDetails: "12 adet kritik E2E senaryosu koşuldu: Randevu kaydı, hasta sorgulama, slot rezervasyonu %100 geçti. Canlıya güvenle dağıtıldı.",
+        metrics: {
+          systemStatus: "Kurtarıldı",
+          activePatients: "180 Bekliyor",
+          downtime: "+5 Dakika",
+          riskScore: "Minimum",
+        },
+      },
+      B: {
+        title: "Test Edilmeden Canlıya Dağıtıldı",
+        summary: "Dağıtım hızlı oldu ancak test edilmeyen kod parçası randevu çakışmalarına yol açtı.",
+        whatHappened: "Testler atlandığı için aynı randevu saatine birden fazla hastanın atanması (double-booking) hatası canlıya sızdı.",
+        whyItHappened: "Kriz baskısı altında testleri atlamak, teknik borcu ve regresyon riskini doğrudan son kullanıcıya transfer eder.",
+        technicalDetails: "API yanıt süresi düştü ancak veritabanında 'unique constraint violation' hataları patladı. Hasta kayıtları birbiriyle çakıştı.",
+        metrics: {
+          systemStatus: "Kısmi Arıza",
+          activePatients: "300 Bekliyor",
+          downtime: "+12 Dakika (Veri Düzeltme)",
+          riskScore: "Kritik",
+        },
+      },
+    },
+    beginnerHint: "💡 5 dakikalık bir test gecikmesi kulağa kötü gelebilir; ancak canlıda ortaya çıkacak yeni bir çöküş saatlerce sürebilir.",
+    roleContext: {
+      backend: "Backend Bakış Açısı: Concurrency ve race condition hataları sadece duman testleri sırasında yakalanabilir.",
+      frontend: "Frontend Bakış Açısı: Test edilmeyen backend yanıtları arayüzde beklenmedik 'undefined' çökmelerine neden olabilir.",
+      fullstack: "Full-Stack Bakış Açısı: E2E kritik yol testi hem API sözleşmesini (contract) hem de UI akışını doğrular.",
+      devops: "DevOps Bakış Açısı: CI/CD hattında '--skip-tests' bayrağını kullanmak prod ortamına patlamaya hazır bomba atmaktır.",
+      software: "Genel Mühendislik: Yazılım güvenilirliği kriz anında alınan disiplinli test kararlarıyla inşa edilir.",
+      student: "Öğrenci Notu: Gerçek hayatta baskı ne kadar büyük olursa olsun, kritik duman testleri atlanmamalıdır.",
+    },
+  },
+
+  3: {
+    id: 3,
+    title: "Aşama 3: KVKK ve Veri Gizliliği Kararı",
+    subtitle: "Hukuki ve Etik Mühendislik Sorumluluğu",
+    category: "KVKK & Gizlilik",
+    scenario: "Saat 08:20. Krizin kök nedenini belirlemek ve diğer nöbetçi ekiplerle analiz etmek üzere uygulama hata loglarını paylaşman gerekiyor. Log satırlarında hastaların T.C. Kimlik Numaraları, ad-soyadları, telefonları ve gittikleri tıbbi poliklinikler (Onkoloji, Psikiyatri, Kadın Doğum) açık metin (cleartext) olarak görünüyor. Slack/Teams kanalında 40 kişi ve harici yüklenici mühendisler var. Nasıl paylaşacaksın?",
+    systemMetrics: {
+      time: "08:20",
+      waitingPatients: 120,
+      errorRate: "%8.5",
+      dbConnections: "65/200",
+    },
+    options: {
+      A: {
+        id: "A",
+        title: "Kişisel ve Sağlık Verilerini Maskeleyerek Paylaş",
+        shortDesc: "T.C. Kimlik, isim ve tanı alanlarını SHA-256 veya *** ile anonimleştirip gönder.",
+        actionLabel: "Maskele ve Paylaş",
+        badge: "KVKK / Veri Minimizasyonu",
+        riskLevel: "Düşük",
+      },
+      B: {
+        id: "B",
+        title: "Aciliyet Nedeniyle Ham Logları Olduğu Gibi Paylaş",
+        shortDesc: "Zaman kaybetmemek için log dosyasını sansürsüzce genel kanala yapıştır.",
+        actionLabel: "Ham Logları Gönder",
+        badge: "Ağır Hukuki / Gizlilik Riski",
+        riskLevel: "Kritik",
+      },
+    },
+    consequences: {
+      A: {
+        title: "Hasta Verileri Maskelenerek Güvenle Paylaşıldı",
+        summary: "KVKK Madde 12 uyarınca veri güvenliği ve veri minimizasyonu ilkelerine tam uyum sağlandı.",
+        whatHappened: "Loglardaki hassas nitelikli sağlık verileri ve kimlik numaraları `TC: 123*****89`, `Tanı: [REDACTED]` formatına dönüştürüldü.",
+        whyItHappened: "Kriz ortamı hukuki ve etik kuralların çiğnenmesine mazeret olamaz. Mühendislik analitiği hasta mahremiyetini ifşa etmeden de yürütülebilir.",
+        technicalDetails: "Kök neden olan stack trace ve SQL query parametreleri açık kaldı; ancak PII (Personally Identifiable Information) tamamen filtrelendi.",
+        metrics: {
+          systemStatus: "Kurtarıldı",
+          activePatients: "0 (Tamamı İşlendi)",
+          downtime: "Çözüldü",
+          riskScore: "Sıfır İhlal",
+        },
+      },
+      B: {
+        title: "Kritik Hasta Sağlık Verileri Sızdırıldı (KVKK İhlali)",
+        summary: "Ham loglar genel kanalda paylaşıldı. 300 hastanın özel sağlık ve kimlik bilgileri yetkisiz kişilerin eline geçti.",
+        whatHappened: "Dış yüklenicilerin ve stajyerlerin de bulunduğu kanalda psikiyatri ve onkoloji hastalarının tam kimlik listesi yayınlandı.",
+        whyItHappened: "Hız bahanesiyle güvenlik filtreleri atlandı. Kişisel Verileri Koruma Kurulu (KVKK) resen soruşturma başlattı.",
+        technicalDetails: "KVKK Kanunu Md. 12 ve TCK 136 kapsamında kurumsal veri ihlali tutanağı tutuldu. Kurum ağır idari para cezası ve itibar kaybıyla karşı karşıya kaldı.",
+        metrics: {
+          systemStatus: "Kritik Çöküş",
+          activePatients: "Veri İhlali Bildirimi",
+          downtime: "Hukuki Soruşturma",
+          riskScore: "Yıkıcı Ceza",
+        },
+      },
+    },
+    beginnerHint: "💡 Kişisel Verilerin Korunması Kanunu (KVKK) uyarınca sağlık verileri 'özel nitelikli kişisel veri'dir. Loglarda hata ararken hasta isimlerine değil hata kodlarına ihtiyacımız var.",
+    roleContext: {
+      backend: "Backend Bakış Açısı: Log sanitization kütüphaneleri (log masking filter) prod loglarının temel hijyen standardıdır.",
+      frontend: "Frontend Bakış Açısı: Console loglarına ve network payload'larına asla hassas kimlik bilgisi basılmamalıdır.",
+      fullstack: "Full-Stack Bakış Açısı: Veri minimizasyonu uçtan uca mimarinin ayrılmaz bir parçasıdır.",
+      devops: "DevOps Bakış Açısı: Log aggregator (ELK, Datadog) ingestion pipeline seviyesinde otomatik PII masking uygulanmalıdır.",
+      software: "Genel Mühendislik: En hızlı mühendis değil, güvenilir ve etik mühendis sistemleri ayakta tutar.",
+      student: "Öğrenci Notu: Gerçek hayatta veri ihlalleri hapis ve milyonluk tazminat davalarına yol açabilir.",
+    },
+  },
+};
+
+export const ENDINGS_DATA: Record<'good' | 'bad', EndingData> = {
+  good: {
+    type: 'good',
+    title: "BAŞARILI KRİZ ÇÖZÜMÜ: Randevular Açık, Veriler Güvende",
+    subtitle: "Mükemmel Mühendislik Refleksi ve Etik Liderlik",
+    badge: "Örnek Mühendislik Başarısı",
+    summary: "08:00'de başlayan kritik randevu kesintisi saat 08:25 itibariyle sıfır veri kaybı ve sıfır KVKK ihlali ile tamamen çözüldü. 300 hastanın tamamı randevularını başarıyla aldı.",
+    timeline: [
+      { time: "08:00", event: "Randevu mikroservisi çöktü. 300 hasta sırada.", status: "danger" },
+      { time: "08:06", event: "Mimari karar verildi: Kontrollü stabil sürüme geri dönüldü.", status: "warning" },
+      { time: "08:14", event: "Kritik yol ve duman testleri koşularak regresyon riski önlendi.", status: "success" },
+      { time: "08:21", event: "Analiz logları KVKK standartlarında maskelenerek paylaşıldı.", status: "success" },
+      { time: "08:25", event: "Sistem %100 operasyonel duruma getirildi. Kriz çözüldü.", status: "success" },
+    ],
+    rootCauseAnalysis: "v2.4.0 sürümündeki veritabanı bağlantı havuzu sızıntısı ve eksik endeksler tespit edildi. Rollback ve titiz duman testleri sayesinde canlı veritabanı tutarsızlığı önlendi. Maskelenmiş loglar sayesinde kök neden 15 dakika içinde bulundu.",
+    engineeringLessons: [
+      "Geriye Dönük Uyumlu Dağıtımlar: Canlıya çıkmadan önce şema migration'larının geri alınabilirliği doğrulanmalıdır.",
+      "Kriz Anında Test Disiplini: Baskı altında bile 5 dakikalık duman testlerini koşmak, saatler sürecek ikincil felaketleri engeller.",
+      "Veri Minimizasyonu ve KVKK: Hata ayıklarken hasta kimlikleri yerine korelasyon ID'leri (Correlation IDs) kullanılmalıdır.",
+      "Kriz İletişimi: Panik yerine metodik mühendislik yaklaşımı can kurtarır.",
+    ],
+    kvkkStatus: "Tam Uyum — Hiçbir kişisel veri sızdırılmadı. İhlal bildirimi gerekmemektedir.",
+    metrics: {
+      resolvedPatients: 300,
+      totalDowntime: "25 Dakika",
+      complianceScore: "%100 (Kusursuz)",
+      recoveryQuality: "A+ Seviyesi",
+    },
+  },
+
+  bad: {
+    type: 'bad',
+    title: "KRİTİK MÜHENDİSLİK VEYA KVKK FELAKETİ",
+    subtitle: "Sistem Kurtarılsa Bile Güven ve Hukuk Kaybedildi",
+    badge: "Kritik Hata / Kriz Başarısızlığı",
+    summary: "Kriz anında yapılan teknik ve hukuki ihmaller sonucunda sistem ya yeni bir çöküşe sürüklendi ya da hastaların en gizli sağlık verileri kontrolsüzce sızdırıldı. Ağır yaptırımlar kapıda.",
+    timeline: [
+      { time: "08:00", event: "Randevu sistemi çöktü, 300 hasta kapıda bekliyor.", status: "danger" },
+      { time: "08:08", event: "Kriz anında riskli veya kontrolsüz bir müdahale yapıldı.", status: "warning" },
+      { time: "08:16", event: "Gereken testler atlandı veya doğrulanmamış kod canlıya basıldı.", status: "danger" },
+      { time: "08:22", event: "Hassas hasta verileri açık kanallarda ifşa edildi veya veri tabanı bozuldu.", status: "danger" },
+      { time: "08:35", event: "KVKK soruşturması başlatıldı ve hastane yönetimi acil toplantıya çağrıldı.", status: "danger" },
+    ],
+    rootCauseAnalysis: "Teknik baskı altında temel mühendislik ve güvenlik protokollerinin çiğnenmesi. Test edilmeyen dağıtım veya canlıya doğrudan yama atılması sistemde zincirleme kilitlenmelere yol açtı. Ham log paylaşımı ise affedilemez bir KVKK ihlali doğurdu.",
+    engineeringLessons: [
+      "Canlıda Asla Kör Yama Yapma: Canlıda yapılan kontrolsüz müdahaleler semptomu gizler, kök sorunu katlar.",
+      "Testleri Asla Atlama: '--skip-tests' bir hız hilesi değil, üretim felaketine davetiyedir.",
+      "KVKK İhlali Affedilmez: Sağlık verileri en yüksek koruma kategorisindedir; hız uğruna hasta mahremiyeti feda edilemez.",
+      "On-Call Protokollerine Sadakat: Kriz yönetimi duygularla değil standart işletim prosedürleriyle (SOP) yönetilir.",
+    ],
+    kvkkStatus: "AĞIR İHLAL — Kişisel Verileri Koruma Kurulu (KVKK) Md. 12 ve TCK 136 ihlali. Resmi soruşturma ve idari para cezası süreci.",
+    metrics: {
+      resolvedPatients: 74,
+      totalDowntime: "60+ Dakika (Soruşturma)",
+      complianceScore: "%15 (Kritik İhlal)",
+      recoveryQuality: "F Seviyesi (Başarısız)",
+    },
+  },
+};
+
+export const ONBOARDING_CONFIG = {
+  experienceOptions: [
+    {
+      id: 'beginner' as const,
+      label: 'Başlangıç (Beginner)',
+      desc: 'Her kararda yönlendirici ipuçları ve detaylı Türkçe kavram açıklamaları.',
+      badge: 'Detaylı İpuçları',
+    },
+    {
+      id: 'intermediate' as const,
+      label: 'Orta Seviye (Intermediate)',
+      desc: 'Teknik ödünleşimler (trade-offs) ve karar karşılaştırmaları.',
+      badge: 'Dengeli Zorluk',
+    },
+    {
+      id: 'experienced' as const,
+      label: 'Deneyimli (Experienced)',
+      desc: 'Her kararda 60 saniyelik zaman baskısı, ileri terminoloji, sıfır ipucu.',
+      badge: '60s Zaman Sınırı',
+    },
+  ],
+  roles: [
+    { id: 'backend' as const, label: 'Backend Developer', icon: 'Database' },
+    { id: 'frontend' as const, label: 'Frontend Developer', icon: 'Layout' },
+    { id: 'fullstack' as const, label: 'Full-Stack Developer', icon: 'Layers' },
+    { id: 'devops' as const, label: 'DevOps Engineer', icon: 'Server' },
+    { id: 'software' as const, label: 'Software Engineer', icon: 'Code' },
+    { id: 'student' as const, label: 'Mühendislik Öğrencisi', icon: 'GraduationCap' },
+  ],
+  objectives: [
+    { id: 'architecture' as const, label: 'Yazılım Mimarisi', desc: 'Rollback, migration, dayanıklılık' },
+    { id: 'testing' as const, label: 'Test ve Güvenilirlik', desc: 'Duman testleri, regresyon koruması' },
+    { id: 'privacy' as const, label: 'Güvenlik ve KVKK', desc: 'Sağlık verisi mahremiyeti, log maskeleme' },
+    { id: 'general' as const, label: 'Genel Mühendislik', desc: 'On-call kriz yönetimi ve liderlik' },
+  ],
+};
