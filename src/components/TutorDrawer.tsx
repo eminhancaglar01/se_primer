@@ -20,6 +20,7 @@ interface TutorDrawerProps {
   onClose: () => void;
   currentStageId: DecisionStageId;
   profile: UserProfile | null;
+  onQuestionAsked?: () => void;
 }
 
 export const TutorDrawer: React.FC<TutorDrawerProps> = ({
@@ -27,6 +28,7 @@ export const TutorDrawer: React.FC<TutorDrawerProps> = ({
   onClose,
   currentStageId,
   profile,
+  onQuestionAsked,
 }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -58,6 +60,10 @@ export const TutorDrawer: React.FC<TutorDrawerProps> = ({
   const handleSendMessage = async (textToSend: string) => {
     const text = textToSend.trim();
     if (!text || isLoading) return;
+
+    if (onQuestionAsked) {
+      onQuestionAsked();
+    }
 
     const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,

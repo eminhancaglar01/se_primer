@@ -1,0 +1,54 @@
+{
+  "model_version": "v2.0",
+  "algorithm": "DecisionTree",
+  "framework": "scikit-learn + skl2onnx",
+  "opset_version": 12,
+  "random_state": 42,
+  "decision_threshold": 0.5,
+  "feature_names": [
+    "seviye_kod",
+    "sahne_no",
+    "karar_suresi_sn",
+    "karar_degistirme_sayisi",
+    "onceki_yanlis_sayisi",
+    "ipucu_sayisi"
+  ],
+  "feature_types": [
+    "float32",
+    "float32",
+    "float32",
+    "float32",
+    "float32",
+    "float32"
+  ],
+  "target_name": "destek_gerekli",
+  "class_labels": [
+    0,
+    1
+  ],
+  "class_meanings": {
+    "0": "Destek gerekmez (Otonom ilerleyebilir)",
+    "1": "Destek gerekli (Proaktif Sokratik yardım tetiklenir)"
+  },
+  "onnx_io": {
+    "input_name": "float_input",
+    "input_shape": [
+      null,
+      6
+    ],
+    "output_names": [
+      "label",
+      "probabilities"
+    ]
+  },
+  "metrics": {
+    "f1_score": 0.8393,
+    "accuracy": 0.8278,
+    "precision": 0.967,
+    "recall": 0.7434,
+    "roc_auc": 0.8593,
+    "max_parity_diff": 1.2548346250973452e-08
+  },
+  "evaluation_criteria_passed": true,
+  "preprocessing_contract": "seviye ordinal encoding (beginner:0, intermediate:1, experienced:2). Missing values impute to 0.0."
+}

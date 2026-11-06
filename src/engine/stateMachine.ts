@@ -1,6 +1,11 @@
 import { DecisionChoice, DecisionStageId, EndingData, SimulationState, UserProfile } from '../types';
 import { ENDINGS_DATA, SCENARIO_STAGES } from '../data/scenarioData';
 
+export function generateSessionId(): string {
+  const rand = Math.random().toString(36).substring(2, 9);
+  return `sess_${Date.now()}_${rand}`;
+}
+
 export const INITIAL_SIMULATION_STATE: SimulationState = {
   profile: null,
   currentStageId: 1,
@@ -9,6 +14,14 @@ export const INITIAL_SIMULATION_STATE: SimulationState = {
   isSimulating: false,
   isCompleted: false,
   isTutorOpen: false,
+  sessionId: generateSessionId(),
+  dataCollectionMode: true,
+  records: [],
+  currentStageStartTime: 0,
+  currentStageSwitchCount: 0,
+  totalTutorQuestionsAsked: 0,
+  currentPrediction: null,
+  modelStatus: 'idle',
 };
 
 /**

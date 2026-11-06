@@ -1,9 +1,9 @@
-# SE PRIMER — Sistem ve Yazılım Mühendisliği Kriz Simülasyonu
+# SE PRIMER (THE PRIMER V2) — Sistem ve Yazılım Mühendisliği Kriz Simülasyonu
 ## Kapsamlı Ürün ve Teknik Şartname Belgesi (spec.md)
 
-**Versiyon:** 1.0.0  
-**Tarih:** 2026-10-30  
-**Durum:** Onaylandı / Uygulamaya Hazır  
+**Versiyon:** 2.0.0 (The Primer v2)  
+**Tarih:** 2026-11-06  
+**Durum:** Onaylandı / v2 Geliştirme  
 **Dil:** Türkçe (Turkish)  
 
 ---
@@ -273,3 +273,69 @@ flowchart TD
 - **Beklenen Çıktı:** 
   1. Uygulama beyaz ekrana düşmez veya konsolda yakalanmamış istisna fırlatmaz.
   2. Kullanıcıya çevrimdışı Sokratik fallback mekanizması devreye girerek mevcut aşamaya (ör. Aşama 1 için veritabanı geri dönüşü ve şema riskleri) uygun rehberlik soruları sunar.
+
+---
+
+## 15. The Primer v2 — Davranışsal Makine Öğrenmesi Adaptasyonu (Machine Learning Specification)
+
+### 15.1 Araştırma Sorusu
+> **"Oyuncunun karar verme süresi, karar değiştirme davranışı ve önceki hataları kullanılarak öğrenme desteği ihtiyacı tahmin edilebilir mi ve bu tahmin The Primer deneyimini nasıl uyarlayabilir?"**
+
+### 15.2 Model Mimarisi ve Girdi/Çıktı Sözleşmesi
+- **Görev:** Tabular İkili Sınıflandırma (Tabular Binary Classification).
+- **Hedef Değişken (`destek_gerekli`):** `0` (Otonom ilerleyebilir) veya `1` (Proaktif pedagojik desteğe muhtaç).
+- **Ground Truth Etiketleme Metodolojisi (Veri Sızıntısız):**
+  - Oyuncu mevcut sahnede hatalı/kritik riskli bir seçenek seçtiğinde VEYA
+  - Karar öncesinde AI Eğitmene soru sorup ipucu tükettiğinde VEYA
+  - Karar verme süresi seviye medyanının %150'sini aşarak tereddüt sonucu hata yaptığında $\rightarrow$ `destek_gerekli = 1`.
+  - Oyuncu stabil doğru kararı makul sürede, ipuçsuz ve tereddütsüz aldığında $\rightarrow$ `destek_gerekli = 0`.
+- **Öznitelik Vektörü (Özellik Sırası & Tipleri):**
+  1. `seviye`: `int` (`beginner: 0`, `intermediate: 1`, `experienced: 2`)
+  2. `sahne_no`: `int` (`1`, `2`, `3`)
+  3. `karar_suresi_sn`: `float` (Saniye cinsinden sahne karar süresi)
+  4. `karar_degistirme_sayisi`: `int` (Aynı sahnede seçenek kartları arasındaki geçiş/tıklama sayısı)
+  5. `onceki_yanlis_sayisi`: `int` (Önceki aşamalarda yapılan hatalı seçim sayısı: 0, 1, 2)
+  6. `ipucu_sayisi`: `int` (O ana kadar AI Tutor'a sorulan toplam soru sayısı)
+
+### 15.3 Eğitim Öncesi Model Kabul Eşikleri (Evaluation Thresholds)
+Model yayınlanabilir artefakt (`model/model.onnx`) haline getirilmeden önce aşağıdaki ölçütleri GroupKFold (oturum sızıntısız) çapraz doğrulamada sağlamak **zorundadır**:
+1. **$F_1$-Score (Macro veya Class 1):** $\ge 0.70$
+2. **Accuracy (Doğruluk):** $\ge 0.75$
+3. **ROC-AUC:** $\ge 0.75$
+4. **Çıkarım Toleransı (Inference Parity):** $|\hat{p}_{\text{sklearn}} - \hat{p}_{\text{onnx}}| < 1 \times 10^{-4}$
+
+Bu eşikleri geçemeyen hiçbir model yayınlanamaz.
+
+### 15.4 Oyun Deneyimi Adaptasyon Kuralı
+- **Eşik Değeri:** $\tau = 0.50$
+- **$\hat{p} \ge 0.50$ (Yüksek Destek İhtiyacı):**
+  - Arayüzde `data-cy="proactive-tutor-banner"` ile belirgin bir **"Proaktif Mühendislik Desteği"** paneli açılır.
+  - Sokratik AI Eğitmen ilgili aşamanın mimari riskini ve şema/test/KVKK ödünleşimini vurgulayan yönlendirici bir açıklama sunar.
+- **$\hat{p} < 0.50$ (Düşük Destek İhtiyacı):**
+  - Normal hikâye akışı kesintiye uğramadan devam eder.
+- **Model Yükleme Hatası (ONNX Failure):**
+  - Kullanıcıya açıklayıcı bildirim gösterilir ve kural tabanlı güvenli fallback devreye girer; sahte tahmin üretilmez.
+
+---
+
+## 16. Üç Yeni Ölçülebilir Kabul Örneği (v2 Kabul Kriterleri)
+
+### Kabul Örneği 6: Model Çıkarım Paritesi (Python vs. Tarayıcı ONNX)
+- **Girdi:** `tests/parite.json` içindeki 5 referans test vektörü hem Python `onnxruntime` hem de tarayıcı `onnxruntime-web` ile çalıştırılır.
+- **Beklenen Çıktı:** 
+  1. Her 5 test girdisi için üretilen olasılıklar arasındaki mutlak fark $< 10^{-4}$ ($0.0001$) olmalıdır.
+  2. Cypress parite testi (`05_model_parity.cy.ts`) sıfır hata ile tamamlanmalıdır.
+
+### Kabul Örneği 7: Yüksek Destek İhtiyacı Tetiklenmesi ve Arayüz Adaptasyonu
+- **Girdi:** Oyuncu `beginner` seviyede, Aşama 2'de, önceki sahnede yanlış yapmış (`onceki_yanlis_sayisi=1`), karar süresi 45 saniyeyi geçmiş ve kartlar arasında 3 kez tereddüt etmişken model çıkarımı tetiklenir.
+- **Beklenen Çıktı:**
+  1. Model $P(\text{destek\_gerekli}) \ge 0.50$ hesaplar.
+  2. Arayüzde `proactive-tutor-banner` görünür hale gelir.
+  3. Ekranda Duman Testinin (Smoke Test) önemini vurgulayan proaktif Sokratik soru belirir.
+
+### Kabul Örneği 8: Model Çevrimdışı / Hata Fallback Dayanıklılığı
+- **Girdi:** `model.onnx` dosyasına erişilemediğinde (ağ kesintisi veya bozuk dosya simülasyonu) karar ekranı yüklenir.
+- **Beklenen Çıktı:**
+  1. Uygulama çökmez, beyaz ekran vermez.
+  2. `data-cy="model-status"` rozeti "Yedek Mod (Fallback)" olarak güncellenir.
+  3. Sistem sahte olasılık uydurmaz; kural tabanlı seviye ipucu devreye girerek oyunu oynanabilir tutar.

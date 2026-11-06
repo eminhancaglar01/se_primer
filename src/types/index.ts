@@ -82,6 +82,41 @@ export interface SimulationState {
   isSimulating: boolean;
   isCompleted: boolean;
   isTutorOpen: boolean;
+  // The Primer v2 State Extensions
+  sessionId: string;
+  dataCollectionMode: boolean;
+  records: SessionDecisionRecord[];
+  currentStageStartTime: number;
+  currentStageSwitchCount: number;
+  totalTutorQuestionsAsked: number;
+  currentPrediction: ModelPrediction | null;
+  modelStatus: 'idle' | 'loading' | 'ready' | 'fallback' | 'error';
+}
+
+export interface SessionDecisionRecord {
+  oturum_id: string;
+  sahne_no: DecisionStageId;
+  seviye: ExperienceLevel;
+  seviye_kod: number; // 0: beginner, 1: intermediate, 2: experienced
+  rol: EngineeringRole;
+  hedef: LearningObjective;
+  karar_suresi_sn: number;
+  karar_degistirme_sayisi: number;
+  onceki_yanlis_sayisi: number;
+  ipucu_sayisi: number;
+  secilen_secenek: DecisionChoice;
+  destek_gerekli: 0 | 1;
+  kaynak: 'gercek' | 'sentetik';
+  zaman_damgasi: string;
+}
+
+export interface ModelPrediction {
+  probability: number;
+  threshold: number;
+  needsSupport: boolean;
+  isFallback: boolean;
+  explanation: string;
+  latencyMs?: number;
 }
 
 export interface EndingData {

@@ -1,12 +1,11 @@
 import React from 'react';
 import { 
-  Activity, 
-  AlertOctagon, 
-  AlertTriangle, 
   Award, 
   BookOpen, 
   CheckCircle2, 
   Clock, 
+  Database, 
+  Download, 
   FileCheck, 
   RotateCcw, 
   Scale, 
@@ -14,7 +13,7 @@ import {
   ShieldCheck, 
   Users 
 } from 'lucide-react';
-import { DecisionChoice, EndingData, UserProfile } from '../types';
+import { DecisionChoice, EndingData, SessionDecisionRecord, UserProfile } from '../types';
 
 interface EndingScreenProps {
   ending: EndingData;
@@ -25,6 +24,8 @@ interface EndingScreenProps {
     3?: DecisionChoice;
   };
   onRestart: () => void;
+  records?: SessionDecisionRecord[];
+  onExportCSV?: () => void;
 }
 
 export const EndingScreen: React.FC<EndingScreenProps> = ({
@@ -32,6 +33,8 @@ export const EndingScreen: React.FC<EndingScreenProps> = ({
   profile,
   decisions,
   onRestart,
+  records = [],
+  onExportCSV,
 }) => {
   const isGood = ending.type === 'good';
 
@@ -134,6 +137,36 @@ export const EndingScreen: React.FC<EndingScreenProps> = ({
             </span>
           </div>
         </div>
+      </div>
+
+      {/* The Primer v2 — Session Telemetry & CSV Export Box */}
+      <div className="p-4 rounded-2xl bg-slate-900/90 border border-emerald-500/30 space-y-3">
+        <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+          <div className="flex items-center gap-2">
+            <Database className="w-4 h-4 text-emerald-400" />
+            <h3 className="text-xs font-bold text-white">v2 Oturum Karar Telemetrisi</h3>
+          </div>
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+            {records.length} Karar Kaydedildi
+          </span>
+        </div>
+
+        <p className="text-[11px] text-slate-400 leading-relaxed">
+          Bu oturumdaki davranışsal verileriniz (karar süresi, tereddüt sayısı, ipucu kullanımı ve ground-truth etiket) anonim olarak kaydedilmiştir.
+        </p>
+
+        {onExportCSV && (
+          <button
+            type="button"
+            data-cy="export-csv-btn"
+            data-testid="export-csv-btn"
+            onClick={onExportCSV}
+            className="w-full py-2.5 px-3 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-95"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Oturum Verilerini Dışa Aktar (CSV İndir)</span>
+          </button>
+        )}
       </div>
 
       {/* 08:00 - 08:25 Incident Timeline */}

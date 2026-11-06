@@ -1,0 +1,89 @@
+{
+  "model_file": "model/model.onnx",
+  "tolerance": 0.0001,
+  "feature_names": [
+    "seviye_kod",
+    "sahne_no",
+    "karar_suresi_sn",
+    "karar_degistirme_sayisi",
+    "onceki_yanlis_sayisi",
+    "ipucu_sayisi"
+  ],
+  "test_cases": [
+    {
+      "id": "CASE_1_BEGINNER_HIGH_SUPPORT",
+      "description": "Beginner seviye, Aşama 2, uzun süre (52s), 3 karar değişikliği, 1 önceki hata, 2 ipucu -> Yüksek destek beklenir",
+      "features": [
+        0.0,
+        2.0,
+        52.0,
+        3.0,
+        1.0,
+        2.0
+      ],
+      "python_probability": 1.0,
+      "predicted_label": 1,
+      "decision_threshold": 0.5
+    },
+    {
+      "id": "CASE_2_EXPERIENCED_AUTONOMOUS",
+      "description": "Experienced seviye, Aşama 1, çok hızlı (8.5s), 0 değişiklik, 0 hata, 0 ipucu -> Düşük destek / otonom beklenir",
+      "features": [
+        2.0,
+        1.0,
+        8.5,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "python_probability": 0.133333,
+      "predicted_label": 0,
+      "decision_threshold": 0.5
+    },
+    {
+      "id": "CASE_3_INTERMEDIATE_BORDERLINE",
+      "description": "Intermediate seviye, Aşama 2, 28s süre, 1 değişiklik, 0 hata, 1 ipucu -> Sınırda / orta durum",
+      "features": [
+        1.0,
+        2.0,
+        28.0,
+        1.0,
+        0.0,
+        1.0
+      ],
+      "python_probability": 1.0,
+      "predicted_label": 1,
+      "decision_threshold": 0.5
+    },
+    {
+      "id": "CASE_4_STAGE_3_ACCUMULATED_ERRORS",
+      "description": "Intermediate seviye, Aşama 3 (KVKK), 42s süre, 2 değişiklik, 2 önceki hata, 1 ipucu -> Yüksek destek beklenir",
+      "features": [
+        1.0,
+        3.0,
+        42.0,
+        2.0,
+        2.0,
+        1.0
+      ],
+      "python_probability": 1.0,
+      "predicted_label": 1,
+      "decision_threshold": 0.5
+    },
+    {
+      "id": "CASE_5_EXPERIENCED_UNDER_PRESSURE",
+      "description": "Experienced seviye, Aşama 2, 58s (sayacın bitmesine yakın), 2 değişiklik, 1 hata, 0 ipucu -> Süre baskısında destek",
+      "features": [
+        2.0,
+        2.0,
+        58.0,
+        2.0,
+        1.0,
+        0.0
+      ],
+      "python_probability": 0.818182,
+      "predicted_label": 1,
+      "decision_threshold": 0.5
+    }
+  ]
+}
