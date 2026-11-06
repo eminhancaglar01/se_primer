@@ -90,19 +90,22 @@ npx cypress open
 
 ## 4. Hugging Face Hub Model Yayını
 
-Eğitilen `v2.0` modeli Hugging Face Hub'a sabit commit URL'siyle yayınlamak için hazır betik:
+Eğitilen `v2.0` modeli Hugging Face Hub'da yayınlanmış ve sabit commit URL'siyle uygulamaya entegre edilmiştir.
 
+| Alan | Değer |
+| :--- | :--- |
+| **Model Reposu** | [fajeee1/se-primer-v2](https://huggingface.co/fajeee1/se-primer-v2) |
+| **Commit Hash** | `de8912768971e5d12671b8ee5611433653e45ab8` |
+| **Sabit ONNX URL** | `https://huggingface.co/fajeee1/se-primer-v2/resolve/de8912768971e5d12671b8ee5611433653e45ab8/model.onnx` |
+| **Sabit Config URL** | `https://huggingface.co/fajeee1/se-primer-v2/resolve/de8912768971e5d12671b8ee5611433653e45ab8/config.json` |
+
+Uygulama başlarken modeli önce bu commit-pinned URL'den fetch eder (CORS: `*`, cache-first). HF erişilemezse `public/model/model.onnx` yerel bundle otomatik devreye girer. Tüm deployment metaverisi [`model/hf_deployment.json`](model/hf_deployment.json) dosyasındadır.
+
+Yeni bir sürüm yayınlamak için:
 ```bash
-# 1. Hugging Face Write yetkili token'ınızı ayarlayın
-$env:HF_TOKEN = "hf_your_token_here"
-
-# 2. Modeli yayınlayın
-python scripts/publish_hf.py --repo eminhancaglar/se-primer-v2
+$env:HF_TOKEN = "hf_your_write_token"
+python scripts/publish_hf.py --repo fajeee1/se-primer-v2
 ```
-
-Yayınlanan model dosyalarına kalıcı ve sabit commit ile erişilir:
-- `https://huggingface.co/<KULLANICI>/<REPO>/resolve/<COMMIT>/model.onnx`
-- `https://huggingface.co/<KULLANICI>/<REPO>/resolve/<COMMIT>/config.json`
 
 ---
 

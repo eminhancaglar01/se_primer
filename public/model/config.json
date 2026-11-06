@@ -50,5 +50,12 @@
     "max_parity_diff": 1.2548346250973452e-08
   },
   "evaluation_criteria_passed": true,
-  "preprocessing_contract": "seviye ordinal encoding (beginner:0, intermediate:1, experienced:2). Missing values impute to 0.0."
+  "preprocessing_contract": "seviye ordinal encoding (beginner:0, intermediate:1, experienced:2). Missing values impute to 0.0.",
+  "huggingface": {
+    "repo_id": "fajeee1/se-primer-v2",
+    "commit_hash": "de8912768971e5d12671b8ee5611433653e45ab8",
+    "pinned_model_url": "https://huggingface.co/fajeee1/se-primer-v2/resolve/de8912768971e5d12671b8ee5611433653e45ab8/model.onnx",
+    "pinned_config_url": "https://huggingface.co/fajeee1/se-primer-v2/resolve/de8912768971e5d12671b8ee5611433653e45ab8/config.json",
+    "model_page": "https://huggingface.co/fajeee1/se-primer-v2"
+  }
 }

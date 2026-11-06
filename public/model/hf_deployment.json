@@ -1,0 +1,7 @@
+{
+  "repo_id": "fajeee1/se-primer-v2",
+  "tag": "v2.0",
+  "commit_hash": "de8912768971e5d12671b8ee5611433653e45ab8",
+  "pinned_onnx_url": "https://huggingface.co/fajeee1/se-primer-v2/resolve/de8912768971e5d12671b8ee5611433653e45ab8/model.onnx",
+  "pinned_config_url": "https://huggingface.co/fajeee1/se-primer-v2/resolve/de8912768971e5d12671b8ee5611433653e45ab8/config.json"
+}

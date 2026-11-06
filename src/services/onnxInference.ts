@@ -6,36 +6,118 @@ import { getExperienceCode } from './dataCollector';
 ort.env.wasm.numThreads = 1;
 ort.env.wasm.simd = true;
 
+// Hugging Face Hub Commit-Pinned Model Sabitleri
+export const HF_REPO_ID = 'fajeee1/se-primer-v2';
+export const HF_COMMIT_HASH = 'de8912768971e5d12671b8ee5611433653e45ab8';
+export const HF_PINNED_MODEL_URL = `https://huggingface.co/${HF_REPO_ID}/resolve/${HF_COMMIT_HASH}/model.onnx`;
+export const HF_PINNED_CONFIG_URL = `https://huggingface.co/${HF_REPO_ID}/resolve/${HF_COMMIT_HASH}/config.json`;
+
+const LOCAL_MODEL_PATH = '/model/model.onnx';
+const LOCAL_CONFIG_PATH = '/model/config.json';
+const DECISION_THRESHOLD = 0.50;
+
 let inferenceSession: ort.InferenceSession | null = null;
 let sessionLoadingPromise: Promise<ort.InferenceSession | null> | null = null;
 let lastLoadError: string | null = null;
+let activeModelSource: 'huggingface_pinned' | 'local_bundle' | 'fallback_rule' = 'fallback_rule';
 
-const MODEL_PATH = '/model/model.onnx';
-const DECISION_THRESHOLD = 0.50;
+export interface ModelConfig {
+  model_version: string;
+  algorithm: string;
+  decision_threshold: number;
+  feature_names: string[];
+}
+
+let loadedConfig: ModelConfig | null = null;
+
+/**
+  * Fetches the model config contract from Hugging Face pinned commit or local fallback
+  */
+export async function getModelConfig(): Promise<ModelConfig> {
+  if (loadedConfig) return loadedConfig;
+  try {
+    const res = await fetch(HF_PINNED_CONFIG_URL, { cache: 'force-cache' });
+    if (res.ok) {
+      loadedConfig = await res.json();
+      return loadedConfig!;
+    }
+  } catch (e) {
+    console.warn('[ONNX Web] HF config çekilemedi, yerel deneniyor:', e);
+  }
+
+  try {
+    const res = await fetch(LOCAL_CONFIG_PATH);
+    if (res.ok) {
+      loadedConfig = await res.json();
+      return loadedConfig!;
+    }
+  } catch (e) {
+    // Statik kural yedeği
+  }
+
+  return {
+    model_version: 'v2.0',
+    algorithm: 'DecisionTree',
+    decision_threshold: DECISION_THRESHOLD,
+    feature_names: [
+      'seviye_kod',
+      'sahne_no',
+      'karar_suresi_sn',
+      'karar_degistirme_sayisi',
+      'onceki_yanlis_sayisi',
+      'ipucu_sayisi'
+    ],
+  };
+}
 
 /**
  * Loads the ONNX model into memory (singleton session)
+ * Tries commit-pinned Hugging Face URL first, falls back to local bundle if offline.
  */
 export async function getInferenceSession(): Promise<ort.InferenceSession | null> {
   if (inferenceSession) return inferenceSession;
   if (sessionLoadingPromise) return sessionLoadingPromise;
 
   sessionLoadingPromise = (async () => {
+    // 1. Öncelik: Hugging Face Hub Sabit Commit URL'si
     try {
-      // Önce yerel Vite public yolunu dene
-      const session = await ort.InferenceSession.create(MODEL_PATH, {
+      console.log('[ONNX Web] Hugging Face modelinden yükleniyor:', HF_PINNED_MODEL_URL);
+      const hfResp = await fetch(HF_PINNED_MODEL_URL, { cache: 'force-cache' });
+      if (!hfResp.ok) {
+        throw new Error(`HF HTTP ${hfResp.status}: ${hfResp.statusText}`);
+      }
+      const modelBuffer = await hfResp.arrayBuffer();
+      
+      const session = await ort.InferenceSession.create(new Uint8Array(modelBuffer), {
         executionProviders: ['wasm'],
         graphOptimizationLevel: 'all',
       });
       inferenceSession = session;
       lastLoadError = null;
-      console.log('[ONNX Web] Model başarıyla yüklendi:', MODEL_PATH);
+      activeModelSource = 'huggingface_pinned';
+      console.log('[ONNX Web] Model Hugging Face (commit: ' + HF_COMMIT_HASH.slice(0, 7) + ') üzerinden yüklendi.');
       return session;
-    } catch (err: any) {
-      console.warn('[ONNX Web] Model yükleme hatası, fallback devreye girecek:', err?.message || err);
-      lastLoadError = err?.message || 'Model yüklenemedi';
-      inferenceSession = null;
-      return null;
+    } catch (hfErr: any) {
+      console.warn('[ONNX Web] Hugging Face yükleme uyarısı, yerel bundle deneniyor:', hfErr?.message || hfErr);
+
+      // 2. Öncelik: Yerel Vite Statik Paketi (Çevrimdışı Dayanıklılık)
+      try {
+        const session = await ort.InferenceSession.create(LOCAL_MODEL_PATH, {
+          executionProviders: ['wasm'],
+          graphOptimizationLevel: 'all',
+        });
+        inferenceSession = session;
+        lastLoadError = null;
+        activeModelSource = 'local_bundle';
+        console.log('[ONNX Web] Model yerel statik dosya üzerinden yüklendi:', LOCAL_MODEL_PATH);
+        return session;
+      } catch (localErr: any) {
+        console.error('[ONNX Web] Yerel model de yüklenemedi:', localErr);
+        lastLoadError = localErr?.message || 'Model yüklenemedi';
+        inferenceSession = null;
+        activeModelSource = 'fallback_rule';
+        return null;
+      }
     } finally {
       sessionLoadingPromise = null;
     }
@@ -46,6 +128,10 @@ export async function getInferenceSession(): Promise<ort.InferenceSession | null
 
 export function getModelLoadError(): string | null {
   return lastLoadError;
+}
+
+export function getActiveModelSource(): string {
+  return activeModelSource;
 }
 
 /**
@@ -170,8 +256,11 @@ function calculateFallbackPrediction(features: number[]): { probability: number;
   };
 }
 
-// Global window helper for Cypress Parity Tests
+// Global window helpers for Cypress Parity Tests and Debugging
 if (typeof window !== 'undefined') {
   (window as any).__predictML = predictWithRawFeatures;
   (window as any).__getInferenceSession = getInferenceSession;
+  (window as any).__HF_PINNED_MODEL_URL = HF_PINNED_MODEL_URL;
+  (window as any).__HF_COMMIT_HASH = HF_COMMIT_HASH;
+  (window as any).__getActiveModelSource = getActiveModelSource;
 }

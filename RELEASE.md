@@ -62,7 +62,24 @@ Modelin çalışmasında veya tarayıcı ortamında herhangi bir aksaklık yaşa
 
 ---
 
-## 4. Mimari Karşılaştırma Matrisi (Trade-Off Matrix)
+## 4. Hugging Face Hub Yayın Bilgileri
+
+| Alan | Değer |
+| :--- | :--- |
+| **Model Reposu** | [fajeee1/se-primer-v2](https://huggingface.co/fajeee1/se-primer-v2) |
+| **Commit Hash (Sabitlenmiş)** | `de8912768971e5d12671b8ee5611433653e45ab8` |
+| **Yayın Etiketi** | `v2.0` |
+| **Sabit ONNX URL** | `https://huggingface.co/fajeee1/se-primer-v2/resolve/de8912768971e5d12671b8ee5611433653e45ab8/model.onnx` |
+| **Sabit Config URL** | `https://huggingface.co/fajeee1/se-primer-v2/resolve/de8912768971e5d12671b8ee5611433653e45ab8/config.json` |
+| **CORS Politikası** | Tüm originlere açık (`Access-Control-Allow-Origin: *`) — tarayıcıdan doğrudan fetch edilebilir |
+| **Çevrimdışı Dayanıklılık** | HF'den yüklenemezse `/public/model/model.onnx` yerel bundle otomatik devreye girer |
+
+> [!IMPORTANT]
+> Uygulama **önce** Hugging Face sabitlenmiş commit URL'sini dener. HF erişilemezse yerel pakete (Vite `public/model/`) sessizce geçer. Bu davranış `src/services/onnxInference.ts` → `getInferenceSession()` içinde belgelenmiştir.
+
+---
+
+## 5. Mimari Karşılaştırma Matrisi (Trade-Off Matrix)
 
 The Primer projesinde neden **Tarayıcı İçi Çıkarım (Browser / ONNX WebAssembly)** seçildiğini gösteren kapsamlı mimari değerlendirme matrisi:
 
