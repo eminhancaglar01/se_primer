@@ -59,3 +59,4 @@ Makine öğrenmesi modelinin çıkarım ve eğitim sözleşmesinde yer alan 6 te
 6. `ipucu_sayisi` (int)
 
 Bu sıra ve tipler hem Python (`train.py`, `parite.py`) hem de tarayıcı ONNX (`onnxInference.ts`) tarafında birebir aynı olacaktır.
+

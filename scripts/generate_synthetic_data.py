@@ -153,3 +153,4 @@ def generate_synthetic_dataset(num_sessions: int = 60, output_path: str = "data/
 
 if __name__ == "__main__":
     generate_synthetic_dataset(num_sessions=60)
+

@@ -51,3 +51,4 @@ describe('The Primer v2 — Davranışsal Model Adaptasyonu ve Veri Toplama Test
     cy.get('[data-cy="export-csv-btn"]').should('be.visible').and('contain', 'CSV İndir');
   });
 });
+

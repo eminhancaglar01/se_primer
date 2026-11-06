@@ -78,3 +78,4 @@ The Primer projesinde neden **Tarayıcı İçi Çıkarım (Browser / ONNX WebAss
 
 ### Sonuç ve Mimari Gerekçe:
 The Primer bir web tabanlı simülasyon projesidir. Geliştirilen model 6 özellikli tabular bir Karar Ağacı (Decision Tree) olduğundan dosya boyutu yalnızca **~8 KB**'tır. Bu boyut için sunucu altyapısı kurmak gereksiz gecikme, KVKK riskleri ve sunucu maliyeti yaratacaktır. Bu nedenle **Tarayıcı İçi Çıkarım (ONNX WebAssembly)** gecikme, gizlilik, maliyet ve çevrimdışı çalışma açısından en optimum mimaridir.
+

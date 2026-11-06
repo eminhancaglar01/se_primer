@@ -5,3 +5,4 @@ onnx>=1.14.0
 onnxruntime>=1.15.0
 skl2onnx>=1.15.0
 requests>=2.31.0
+

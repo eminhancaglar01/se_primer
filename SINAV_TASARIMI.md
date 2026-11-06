@@ -46,3 +46,4 @@ Kullanıcıların öğrenme davranışlarını ölçmek üzere telemetri toplaya
 | **75 – 89 (İyi)** | Teknik kavramları doğru kavramış, desenleri ve WASM çıkarım avantajlarını açıklamış ancak matematiksel veya parite detaylarında küçük eksikler bırakmıştır. |
 | **50 – 74 (Orta)** | Temel kavramları (rollback, accuracy, KVKK) genel hatlarıyla bilmekte fakat sistem seviyesi tasarım ve çapraz doğrulama sızıntısı detaylarına yeterince değinememiştir. |
 | **0 – 49 (Yetersiz)** | Mimari desenleri veya makine öğrenmesi doğrulama prensiplerini hatalı aktarmıştır. |
+
